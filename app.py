@@ -66,7 +66,7 @@ st.markdown("""
 
 with st.sidebar:
     st.markdown("### Configuration")
-    api_key = st.text_input("Groq API Key", type="password", placeholder="gsk_...", help="Get free key at console.groq.com")
+    api_key = os.environ.get("GROQ_API_KEY") or st.text_input("Groq API Key", type="password", placeholder="gsk_...", help="Get free key at console.groq.com")
     model = st.selectbox("LLM Model", ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"], help="LLaMA 3.3 70B recommended")
     st.markdown("---")
     st.markdown("### Improvements Active")
@@ -453,8 +453,7 @@ with col2:
     if thermal_file: st.markdown('<div class="success-box">Thermal report uploaded successfully</div>', unsafe_allow_html=True)
 
 st.markdown("---")
-use_sample = st.checkbox("Use built-in sample data (demo mode)", value=not (inspection_file and thermal_file))
-if use_sample: st.markdown('<div class="warning-box">Demo mode: Using pre-loaded sample data for Greenfield Commercial Complex.</div>', unsafe_allow_html=True)
+
 if OCR_AVAILABLE: st.markdown('<div class="info-box">OCR is enabled - scanned PDFs are supported.</div>', unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -469,14 +468,12 @@ if generate_btn:
         status = st.empty()
         status.markdown("**Step 1/4:** Extracting document content...")
         progress.progress(10)
-        if use_sample or not (inspection_file and thermal_file):
-            from sample_data import SAMPLE_INSPECTION_TEXT, SAMPLE_THERMAL_TEXT
-            inspection_text, thermal_text = SAMPLE_INSPECTION_TEXT, SAMPLE_THERMAL_TEXT
-            inspection_images, thermal_images, ocr_used = [], [], False
-        else:
-            inspection_text, inspection_images, ocr_i = extract_pdf_content(inspection_file, "inspection")
-            thermal_text, thermal_images, ocr_t = extract_pdf_content(thermal_file, "thermal")
-            ocr_used = ocr_i or ocr_t
+        if not (inspection_file and thermal_file):
+            st.error("Please upload both Inspection and Thermal PDF files.")
+            st.stop()
+        inspection_text, inspection_images, ocr_i = extract_pdf_content(inspection_file, "inspection")
+        thermal_text, thermal_images, ocr_t = extract_pdf_content(thermal_file, "thermal")
+        ocr_used = ocr_i or ocr_t
         st.session_state.inspection_text = inspection_text
         st.session_state.thermal_text = thermal_text
         st.session_state.inspection_images = inspection_images
