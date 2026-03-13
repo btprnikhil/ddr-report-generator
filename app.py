@@ -26,10 +26,14 @@ from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 
 # OCR optional import
-if pytesseract:
-    text = pytesseract.image_to_string(image)
-else:
-    text = ""
+# OCR optional import
+try:
+    import pytesseract
+    OCR_AVAILABLE = True
+except:
+    pytesseract = None
+    OCR_AVAILABLE = False
+
 
 
 st.set_page_config(page_title="DDR Report Generator", page_icon="🏗️",
